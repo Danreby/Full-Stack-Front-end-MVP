@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const addDeptSelect   = document.getElementById('inputAddDepartment');
 
+  // helpers para abrir/fechar modal
   function showModal(m) { m.classList.add('open'); }
   function hideModal(m) { m.classList.remove('open'); }
 
@@ -31,6 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
     })
   );
 
+  // popula <select> de setores
   function populateDeptSelect() {
     addDeptSelect.innerHTML = '';
     sectorList.forEach(sector => {
@@ -41,6 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // renderiza tabela de funcionários
   function renderEmployeeTable(list) {
     tableBody.innerHTML = '';
     list.forEach(emp => {
@@ -58,6 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
       tableBody.appendChild(row);
     });
 
+    // vincula botões de excluir
     document.querySelectorAll('.btn-delete').forEach(button => {
       button.addEventListener('click', async () => {
         const id = button.dataset.id;
@@ -67,17 +71,18 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
+    // vincula botões de editar
     document.querySelectorAll('.btn-edit').forEach(button => {
       button.addEventListener('click', () => {
-        const id = button.dataset.id;
-        editEmployee(id);
+        editEmployee(button.dataset.id);
       });
     });
   }
 
+  // busca todos os funcionários
   async function fetchEmployees() {
     try {
-      const res = await fetch(`${apiBaseUrl}/funcionarios`);
+      const res  = await fetch(`${apiBaseUrl}/funcionarios`);
       const data = await res.json();
       employeeList = data.funcionarios || [];
       renderEmployeeTable(employeeList);
@@ -86,9 +91,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // busca todos os setores
   async function fetchSectors() {
     try {
-      const res = await fetch(`${apiBaseUrl}/sectors`);
+      const res  = await fetch(`${apiBaseUrl}/sectors`);
       const data = await res.json();
       sectorList = data.sectors || [];
       populateDeptSelect();
@@ -97,6 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // filtro de busca
   searchInput.addEventListener('input', () => {
     const txt = searchInput.value.toLowerCase();
     renderEmployeeTable(
@@ -104,29 +111,30 @@ document.addEventListener('DOMContentLoaded', () => {
     );
   });
 
+  // abrir modal de adicionar
   addButton.addEventListener('click', () => {
     resetFormHandler();
     showModal(addModal);
   });
 
+  // abrir modal de adicionar setor
   addSectorButton.addEventListener('click', () => showModal(addSectorModal));
 
+  // configura o form para o modo "Add" e limpa campos
   function resetFormHandler() {
     addForm.onsubmit = handleAddSubmit;
     addForm.reset();
   }
 
+  // handler para POST /funcionarios
   async function handleAddSubmit(ev) {
     ev.preventDefault();
 
-    const name = document.getElementById('inputAddName').value.trim();
-    const email = document.getElementById('inputAddEmail').value.trim();
-    const sectorId = parseInt(document.getElementById('inputAddDepartment').value, 10);
+    const name     = document.getElementById('inputAddName').value.trim();
+    const email    = document.getElementById('inputAddEmail').value.trim();
+    const sectorId = parseInt(addDeptSelect.value, 10);
 
-    const formBody = new URLSearchParams();
-    formBody.append('name', name);
-    formBody.append('email', email);
-    formBody.append('sector_id', sectorId);
+    const formBody = new URLSearchParams({ name, email, sector_id: sectorId });
 
     try {
       const response = await fetch(`${apiBaseUrl}/funcionarios`, {
@@ -139,7 +147,6 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       const data = await response.json();
-
       if (response.ok) {
         await fetchEmployees();
         hideModal(addModal);
@@ -152,6 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // handler para DELETE /funcionarios/:id
   async function deleteEmployee(id) {
     try {
       const response = await fetch(`${apiBaseUrl}/funcionarios/${id}`, {
@@ -168,27 +176,27 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // configura o form para o modo "Edit" e faz PUT /funcionarios/:id
   function editEmployee(id) {
     const employee = employeeList.find(e => e.id == id);
     if (!employee) return;
 
-    document.getElementById('inputAddName').value = employee.name;
-    document.getElementById('inputAddEmail').value = employee.email;
-    document.getElementById('inputAddDepartment').value = employee.sector.id;
+    // preenche modal com dados existentes
+    document.getElementById('inputAddName').value       = employee.name;
+    document.getElementById('inputAddEmail').value      = employee.email;
+    addDeptSelect.value                                 = employee.sector.id;
 
     showModal(addModal);
 
+    // sobrescreve onsubmit para usar PUT
     addForm.onsubmit = async ev => {
       ev.preventDefault();
 
-      const name = document.getElementById('inputAddName').value.trim();
-      const email = document.getElementById('inputAddEmail').value.trim();
-      const sectorId = parseInt(document.getElementById('inputAddDepartment').value, 10);
+      const name     = document.getElementById('inputAddName').value.trim();
+      const email    = document.getElementById('inputAddEmail').value.trim();
+      const sectorId = parseInt(addDeptSelect.value, 10);
 
-      const formBody = new URLSearchParams();
-      formBody.append('name', name);
-      formBody.append('email', email);
-      formBody.append('sector_id', sectorId);
+      const formBody = new URLSearchParams({ name, email, sector_id: sectorId });
 
       try {
         const response = await fetch(`${apiBaseUrl}/funcionarios/${id}`, {
@@ -205,49 +213,18 @@ document.addEventListener('DOMContentLoaded', () => {
           hideModal(addModal);
           await fetchEmployees();
         } else {
-          alert(`Erro ao atualizar funcionário: ${response.status}`);
+          const data = await response.json();
+          alert(`Erro (${response.status}): ${data.message || response.statusText}`);
         }
       } catch (err) {
         console.error('Erro ao editar funcionário:', err);
+        alert('Erro inesperado ao editar funcionário.');
       }
     };
   }
 
-  addForm.addEventListener('submit', handleAddSubmit);
-
-  addSectorForm.addEventListener('submit', async ev => {
-    ev.preventDefault();
-    const name = document.getElementById('inputAddSectorName').value.trim();
-    if (!name) return alert('Informe um nome de setor válido.');
-
-    const formBody = new URLSearchParams();
-    formBody.append('name', name);
-
-    try {
-      const response = await fetch(`${apiBaseUrl}/sectors`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'Accept': 'application/json',
-        },
-        body: formBody.toString(),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        await fetchSectors();
-        addSectorForm.reset();
-        hideModal(addSectorModal);
-      } else {
-        alert(`Erro (${response.status}): ${data.message}`);
-      }
-    } catch (err) {
-      console.error('Erro ao criar setor:', err);
-      alert('Erro inesperado ao criar setor.');
-    }
-  });
-
+  // configura form padrão e faz carregamento inicial
+  resetFormHandler();
   fetchSectors();
   fetchEmployees();
 });
