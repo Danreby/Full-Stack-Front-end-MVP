@@ -19,7 +19,7 @@
     <h2>Lista de Funcionários</h2>
     <div class="controls">
       <button id="buttonAddEmployee" class="btn-primary">Adicionar Funcionário</button>
-      <button id="buttonAddSector" class="btn-secondary">Adicionar Setor</button>
+      <button id="buttonAddSector" class="btn-secondary">Gerenciar Setores</button>
       <input type="text" id="inputSearchEmployee" placeholder="Buscar por nome..." class="search-input"/>
     </div>
     <table id="employeeTable">
@@ -36,6 +36,7 @@
     </table>
   </main>
 
+  <!-- Modal Adicionar/Editar Funcionário -->
   <div id="modalAddEmployee" class="modal">
     <div class="modal-content">
       <h3>Adicionar Funcionário</h3>
@@ -63,12 +64,13 @@
     </div>
   </div>
 
+  <!-- Modal Gerenciar Setores -->
   <div id="modalAddSector" class="modal">
     <div class="modal-content">
-      <h3>Adicionar Setor</h3>
+      <h3>Gerenciar Setores</h3>
       <form id="formAddSector" class="modal-form">
         <label>
-          Nome do Setor
+          Adicionar Setor
           <input type="text" id="inputAddSectorName" required maxlength="100" placeholder="Nome do setor"/>
         </label>
         <div class="modal-actions">
@@ -76,13 +78,26 @@
           <button type="button" class="btn-secondary" data-close="modalAddSector">Cancelar</button>
         </div>
       </form>
+
+      <h4>Setores existentes</h4>
+      <table id="sectorTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nome</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
     </div>
   </div>
 
   <div id="modalConfirmDelete" class="modal">
     <div class="modal-content">
       <h3>Confirmar Exclusão</h3>
-      <p>Tem certeza que deseja excluir este funcionário?</p>
+      <p>Tem certeza que deseja excluir este item?</p>
       <div class="modal-actions">
         <button id="confirmDeleteBtn" class="btn-primary">Sim, excluir</button>
         <button type="button" class="btn-secondary" data-close="modalConfirmDelete">Cancelar</button>

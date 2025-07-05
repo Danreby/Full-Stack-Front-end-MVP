@@ -314,3 +314,38 @@ td .btn-delete,
 td .btn-edit {
   margin-right: 5px;
 }
+
+.btn-sector-delete {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.btn-sector-delete:hover {
+  background-color: #c0392b;
+}
+
+.btn-sector-edit {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.btn-sector-edit:hover {
+  background-color: #2980b9;
+}
+
+td .btn-sector-delete,
+td .btn-sector-edit {
+  margin-right: 5px;
+}
