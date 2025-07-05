@@ -97,6 +97,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // FILTRO POR NOME
+  searchInput.addEventListener('input', () => {
+    const txt      = searchInput.value.trim().toLowerCase();
+    const filtered = employeeList.filter(e =>
+      e.name.toLowerCase().includes(txt)
+    );
+    renderEmployeeTable(filtered);
+  });
+
   // Fetch setores
   async function fetchSectors() {
     try {
@@ -121,6 +130,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // abrir modal de adicionar
+  addButton.addEventListener('click', () => {
+    resetFormHandler();
+    showModal(addModal);
+  });
+
+  // abrir modal de adicionar setor
+  addSectorButton.addEventListener('click', () => showModal(addSectorModal));
+  
   // Configura form para "Add"
   function resetFormHandler() {
     addForm.onsubmit = handleAddSubmit;
