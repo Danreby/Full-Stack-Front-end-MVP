@@ -7,6 +7,9 @@
   <link rel="stylesheet" href="styles.css"/>
 </head>
 <body>
+  <!-- Container para Flash Cards -->
+  <div id="flash-container" class="flash-container"></div>
+
   <header class="site-header">
     <div class="container header-container">
       <h1>MVP LTDA</h1>
@@ -27,28 +30,21 @@
           <th>Nome</th>
           <th>Setor</th>
           <th>E-mail</th>
-          <th>Ações</th> <!-- Nova coluna -->
+          <th>Ações</th>
         </tr>
       </thead>
       <tbody></tbody>
-</table>
-
+    </table>
   </main>
 
-  <!-- Modal Adicionar Funcionário -->
+  <!-- Modal Adicionar/Editar Funcionário -->
   <div id="modalAddEmployee" class="modal">
     <div class="modal-content">
       <h3>Adicionar Funcionário</h3>
       <form id="formAddEmployee" class="modal-form">
         <label>
           Nome
-          <input
-            type="text"
-            id="inputAddName"
-            required
-            maxlength="100"
-            placeholder="Nome completo"
-          />
+          <input type="text" id="inputAddName" required maxlength="100" placeholder="Nome completo"/>
         </label>
         <label>
           Setor
@@ -56,15 +52,10 @@
         </label>
         <label>
           E-mail
-          <input
-            type="email"
-            id="inputAddEmail"
-            required
-            maxlength="150"
-            placeholder="exemplo@email.com"
-            pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
-            title="Digite um e-mail válido (ex: nome@dominio.com)"
-          />
+          <input type="email" id="inputAddEmail" required maxlength="150"
+                 placeholder="exemplo@email.com"
+                 pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+                 title="Digite um e-mail válido (ex: nome@dominio.com)" />
         </label>
         <div class="modal-actions">
           <button type="submit" class="btn-primary">Salvar</button>
@@ -81,13 +72,7 @@
       <form id="formAddSector" class="modal-form">
         <label>
           Nome do Setor
-          <input
-            type="text"
-            id="inputAddSectorName"
-            required
-            maxlength="100"
-            placeholder="Nome do setor"
-          />
+          <input type="text" id="inputAddSectorName" required maxlength="100" placeholder="Nome do setor"/>
         </label>
         <div class="modal-actions">
           <button type="submit" class="btn-primary">Salvar</button>
@@ -97,15 +82,17 @@
     </div>
   </div>
 
-  <!-- Campo de busca -->
-  <input
-    type="text"
-    id="inputSearchEmployee"
-    placeholder="Buscar por nome..."
-    class="search-input"
-    maxlength="100"
-  />
-
+  <!-- Modal Confirmar Exclusão -->
+  <div id="modalConfirmDelete" class="modal">
+    <div class="modal-content">
+      <h3>Confirmar Exclusão</h3>
+      <p>Tem certeza que deseja excluir este funcionário?</p>
+      <div class="modal-actions">
+        <button id="confirmDeleteBtn" class="btn-primary">Sim, excluir</button>
+        <button type="button" class="btn-secondary" data-close="modalConfirmDelete">Cancelar</button>
+      </div>
+    </div>
+  </div>
 
   <footer class="site-footer">
     <div class="container">

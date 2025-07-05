@@ -1,49 +1,71 @@
 document.addEventListener('DOMContentLoaded', () => {
   const apiBaseUrl = 'http://localhost:5000';
 
-  let employeeList = [];
-  let sectorList = [];
+  let employeeList      = [];
+  let sectorList        = [];
+  let pendingDeleteId;             // Guarda ID do funcionário a deletar
 
-  const tableBody       = document.querySelector('#employeeTable tbody');
-  const searchInput     = document.getElementById('inputSearchEmployee');
-  const addButton       = document.getElementById('buttonAddEmployee');
-  const addSectorButton = document.getElementById('buttonAddSector');
+  const tableBody        = document.querySelector('#employeeTable tbody');
+  const searchInput      = document.getElementById('inputSearchEmployee');
+  const addButton        = document.getElementById('buttonAddEmployee');
+  const addSectorButton  = document.getElementById('buttonAddSector');
 
-  const addModal        = document.getElementById('modalAddEmployee');
-  let addForm           = document.getElementById('formAddEmployee');
-  const addSectorModal  = document.getElementById('modalAddSector');
-  const addSectorForm   = document.getElementById('formAddSector');
+  const addModal         = document.getElementById('modalAddEmployee');
+  const addForm          = document.getElementById('formAddEmployee');
+  const addSectorModal   = document.getElementById('modalAddSector');
+  const addSectorForm    = document.getElementById('formAddSector');
 
-  const addDeptSelect   = document.getElementById('inputAddDepartment');
+  const addDeptSelect    = document.getElementById('inputAddDepartment');
+  const flashContainer   = document.getElementById('flash-container');
 
-  // helpers para abrir/fechar modal
+  // Novo modal de confirmação de delete
+  const confirmDeleteModal = document.getElementById('modalConfirmDelete');
+  const confirmDeleteBtn   = document.getElementById('confirmDeleteBtn');
+
+  // Helpers de modal
   function showModal(m) { m.classList.add('open'); }
   function hideModal(m) { m.classList.remove('open'); }
 
-  document.querySelectorAll('[data-close]').forEach(btn =>
-    btn.addEventListener('click', () =>
-      hideModal(document.getElementById(btn.dataset.close))
-    )
-  );
+  // Flash cards
+  function showFlash(message, type = 'success') {
+    const flash = document.createElement('div');
+    flash.className = `flash flash-${type}`;
+    flash.textContent = message;
+    flashContainer.appendChild(flash);
+    setTimeout(() => flash.classList.add('visible'), 10);
+    setTimeout(() => flash.classList.remove('visible'), 3000);
+    setTimeout(() => flash.remove(), 3500);
+  }
 
+  // Fecha modais ao clicar em [x] ou fora
+  document.querySelectorAll('[data-close]').forEach(btn =>
+    btn.addEventListener('click', () => {
+      const modal = document.getElementById(btn.dataset.close);
+      hideModal(modal);
+      pendingDeleteId = null;
+    })
+  );
   document.querySelectorAll('.modal').forEach(modal =>
     modal.addEventListener('click', e => {
-      if (e.target === modal) hideModal(modal);
+      if (e.target === modal) {
+        hideModal(modal);
+        pendingDeleteId = null;
+      }
     })
   );
 
-  // popula <select> de setores
+  // Popula select de setores
   function populateDeptSelect() {
     addDeptSelect.innerHTML = '';
-    sectorList.forEach(sector => {
+    sectorList.forEach(sec => {
       const opt = document.createElement('option');
-      opt.value = sector.id;
-      opt.textContent = sector.name;
+      opt.value = sec.id;
+      opt.textContent = sec.name;
       addDeptSelect.appendChild(opt);
     });
   }
 
-  // renderiza tabela de funcionários
+  // Renderiza tabela de funcionários
   function renderEmployeeTable(list) {
     tableBody.innerHTML = '';
     list.forEach(emp => {
@@ -61,37 +83,21 @@ document.addEventListener('DOMContentLoaded', () => {
       tableBody.appendChild(row);
     });
 
-    // vincula botões de excluir
-    document.querySelectorAll('.btn-delete').forEach(button => {
-      button.addEventListener('click', async () => {
-        const id = button.dataset.id;
-        if (confirm('Tem certeza que deseja excluir este funcionário?')) {
-          await deleteEmployee(id);
-        }
+    // Botões de excluir agora abrem o modal de confirmação
+    document.querySelectorAll('.btn-delete').forEach(btn => {
+      btn.addEventListener('click', () => {
+        pendingDeleteId = btn.dataset.id;
+        showModal(confirmDeleteModal);
       });
     });
 
-    // vincula botões de editar
-    document.querySelectorAll('.btn-edit').forEach(button => {
-      button.addEventListener('click', () => {
-        editEmployee(button.dataset.id);
-      });
+    // Botões de editar
+    document.querySelectorAll('.btn-edit').forEach(btn => {
+      btn.addEventListener('click', () => editEmployee(btn.dataset.id));
     });
   }
 
-  // busca todos os funcionários
-  async function fetchEmployees() {
-    try {
-      const res  = await fetch(`${apiBaseUrl}/funcionarios`);
-      const data = await res.json();
-      employeeList = data.funcionarios || [];
-      renderEmployeeTable(employeeList);
-    } catch (err) {
-      console.error('Erro ao buscar funcionários:', err);
-    }
-  }
-
-  // busca todos os setores
+  // Fetch setores
   async function fetchSectors() {
     try {
       const res  = await fetch(`${apiBaseUrl}/sectors`);
@@ -103,127 +109,139 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // filtro de busca
-  searchInput.addEventListener('input', () => {
-    const txt = searchInput.value.toLowerCase();
-    renderEmployeeTable(
-      employeeList.filter(e => e.name.toLowerCase().includes(txt))
-    );
-  });
+  // Fetch funcionários
+  async function fetchEmployees() {
+    try {
+      const res  = await fetch(`${apiBaseUrl}/funcionarios`);
+      const data = await res.json();
+      employeeList = data.funcionarios || [];
+      renderEmployeeTable(employeeList);
+    } catch (err) {
+      console.error('Erro ao buscar funcionários:', err);
+    }
+  }
 
-  // abrir modal de adicionar
-  addButton.addEventListener('click', () => {
-    resetFormHandler();
-    showModal(addModal);
-  });
-
-  // abrir modal de adicionar setor
-  addSectorButton.addEventListener('click', () => showModal(addSectorModal));
-
-  // configura o form para o modo "Add" e limpa campos
+  // Configura form para "Add"
   function resetFormHandler() {
     addForm.onsubmit = handleAddSubmit;
     addForm.reset();
   }
 
-  // handler para POST /funcionarios
+  // Handler POST /funcionarios
   async function handleAddSubmit(ev) {
     ev.preventDefault();
-
     const name     = document.getElementById('inputAddName').value.trim();
     const email    = document.getElementById('inputAddEmail').value.trim();
     const sectorId = parseInt(addDeptSelect.value, 10);
-
-    const formBody = new URLSearchParams({ name, email, sector_id: sectorId });
+    const body     = new URLSearchParams({ name, email, sector_id: sectorId });
 
     try {
-      const response = await fetch(`${apiBaseUrl}/funcionarios`, {
+      const res  = await fetch(`${apiBaseUrl}/funcionarios`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'Accept': 'application/json'
-        },
-        body: formBody.toString()
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString()
       });
-
-      const data = await response.json();
-      if (response.ok) {
-        await fetchEmployees();
+      const data = await res.json();
+      if (res.ok) {
+        showFlash('Funcionário criado com sucesso!', 'success');
         hideModal(addModal);
+        await fetchEmployees();
       } else {
-        alert(`Erro (${response.status}): ${data.message}`);
+        showFlash(data.message || 'Erro ao criar funcionário.', 'error');
       }
     } catch (err) {
-      console.error('Erro ao cadastrar funcionário:', err);
-      alert('Erro inesperado ao cadastrar funcionário.');
+      showFlash('Erro inesperado ao criar funcionário.', 'error');
     }
   }
 
-  // handler para DELETE /funcionarios/:id
+  // DELETE /funcionarios/:id
   async function deleteEmployee(id) {
     try {
-      const response = await fetch(`${apiBaseUrl}/funcionarios/${id}`, {
-        method: 'DELETE'
-      });
-      if (response.ok) {
-        alert('Funcionário excluído com sucesso.');
+      const res = await fetch(`${apiBaseUrl}/funcionarios/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        showFlash('Funcionário deletado.', 'success');
         await fetchEmployees();
       } else {
-        alert(`Erro ao excluir: ${response.status}`);
+        showFlash('Erro ao deletar funcionário.', 'error');
       }
-    } catch (err) {
-      console.error('Erro ao excluir funcionário:', err);
+    } catch {
+      showFlash('Erro inesperado ao deletar funcionário.', 'error');
     }
   }
 
-  // configura o form para o modo "Edit" e faz PUT /funcionarios/:id
+  // Confirmação de delete: chama a função após clicar
+  confirmDeleteBtn.addEventListener('click', async () => {
+    if (!pendingDeleteId) return;
+    hideModal(confirmDeleteModal);
+    await deleteEmployee(pendingDeleteId);
+    pendingDeleteId = null;
+  });
+
+  // Editar funcionário (PUT)
   function editEmployee(id) {
-    const employee = employeeList.find(e => e.id == id);
-    if (!employee) return;
+    const emp = employeeList.find(e => e.id == id);
+    if (!emp) return;
 
-    // preenche modal com dados existentes
-    document.getElementById('inputAddName').value       = employee.name;
-    document.getElementById('inputAddEmail').value      = employee.email;
-    addDeptSelect.value                                 = employee.sector.id;
-
+    document.getElementById('inputAddName').value  = emp.name;
+    document.getElementById('inputAddEmail').value = emp.email;
+    addDeptSelect.value                            = emp.sector.id;
     showModal(addModal);
 
-    // sobrescreve onsubmit para usar PUT
     addForm.onsubmit = async ev => {
       ev.preventDefault();
-
       const name     = document.getElementById('inputAddName').value.trim();
       const email    = document.getElementById('inputAddEmail').value.trim();
       const sectorId = parseInt(addDeptSelect.value, 10);
-
-      const formBody = new URLSearchParams({ name, email, sector_id: sectorId });
+      const body     = new URLSearchParams({ name, email, sector_id: sectorId });
 
       try {
-        const response = await fetch(`${apiBaseUrl}/funcionarios/${id}`, {
+        const res  = await fetch(`${apiBaseUrl}/funcionarios/${id}`, {
           method: 'PUT',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Accept': 'application/json'
-          },
-          body: formBody.toString()
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: body.toString()
         });
-
-        if (response.ok) {
-          alert('Funcionário atualizado com sucesso.');
+        const data = await res.json();
+        if (res.ok) {
+          showFlash('Funcionário editado com sucesso!', 'success');
           hideModal(addModal);
           await fetchEmployees();
         } else {
-          const data = await response.json();
-          alert(`Erro (${response.status}): ${data.message || response.statusText}`);
+          showFlash(data.message || 'Erro ao editar funcionário.', 'error');
         }
-      } catch (err) {
-        console.error('Erro ao editar funcionário:', err);
-        alert('Erro inesperado ao editar funcionário.');
+      } catch {
+        showFlash('Erro inesperado ao editar funcionário.', 'error');
       }
     };
   }
 
-  // configura form padrão e faz carregamento inicial
+  // Criar setor (POST)
+  addSectorForm.addEventListener('submit', async ev => {
+    ev.preventDefault();
+    const name = document.getElementById('inputAddSectorName').value.trim();
+    if (!name) return showFlash('Informe um nome de setor.', 'error');
+    const body = new URLSearchParams({ name });
+
+    try {
+      const res  = await fetch(`${apiBaseUrl}/sectors`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString()
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showFlash('Setor criado com sucesso!', 'success');
+        hideModal(addSectorModal);
+        addSectorForm.reset();
+        await fetchSectors();
+      } else {
+        showFlash(data.message || 'Erro ao criar setor.', 'error');
+      }
+    } catch {
+      showFlash('Erro inesperado ao criar setor.', 'error');
+    }
+  });
+
+  // Inicialização
   resetFormHandler();
   fetchSectors();
   fetchEmployees();
