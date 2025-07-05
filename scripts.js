@@ -10,13 +10,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const addSectorButton = document.getElementById('buttonAddSector');
 
   const addModal        = document.getElementById('modalAddEmployee');
-  const addForm         = document.getElementById('formAddEmployee');
+  let addForm           = document.getElementById('formAddEmployee');
   const addSectorModal  = document.getElementById('modalAddSector');
   const addSectorForm   = document.getElementById('formAddSector');
 
   const addDeptSelect   = document.getElementById('inputAddDepartment');
 
-  // Utilitários
   function showModal(m) { m.classList.add('open'); }
   function hideModal(m) { m.classList.remove('open'); }
 
@@ -32,7 +31,6 @@ document.addEventListener('DOMContentLoaded', () => {
     })
   );
 
-  // Preenche o select de setores
   function populateDeptSelect() {
     addDeptSelect.innerHTML = '';
     sectorList.forEach(sector => {
@@ -52,8 +50,28 @@ document.addEventListener('DOMContentLoaded', () => {
         <td>${emp.name}</td>
         <td>${emp.sector.name}</td>
         <td>${emp.email}</td>
+        <td>
+          <button class="btn-edit" data-id="${emp.id}">Editar</button>
+          <button class="btn-delete" data-id="${emp.id}">Excluir</button>
+        </td>
       `;
       tableBody.appendChild(row);
+    });
+
+    document.querySelectorAll('.btn-delete').forEach(button => {
+      button.addEventListener('click', async () => {
+        const id = button.dataset.id;
+        if (confirm('Tem certeza que deseja excluir este funcionário?')) {
+          await deleteEmployee(id);
+        }
+      });
+    });
+
+    document.querySelectorAll('.btn-edit').forEach(button => {
+      button.addEventListener('click', () => {
+        const id = button.dataset.id;
+        editEmployee(id);
+      });
     });
   }
 
@@ -86,26 +104,31 @@ document.addEventListener('DOMContentLoaded', () => {
     );
   });
 
-  addButton.addEventListener('click', () => showModal(addModal));
+  addButton.addEventListener('click', () => {
+    resetFormHandler();
+    showModal(addModal);
+  });
+
   addSectorButton.addEventListener('click', () => showModal(addSectorModal));
 
-  // CADASTRO DE FUNCIONÁRIO
-  addForm.addEventListener('submit', async ev => {
+  function resetFormHandler() {
+    addForm.onsubmit = handleAddSubmit;
+    addForm.reset();
+  }
+
+  async function handleAddSubmit(ev) {
     ev.preventDefault();
 
-    const name     = document.getElementById('inputAddName').value.trim();
-    const email    = document.getElementById('inputAddEmail').value.trim();
+    const name = document.getElementById('inputAddName').value.trim();
+    const email = document.getElementById('inputAddEmail').value.trim();
     const sectorId = parseInt(document.getElementById('inputAddDepartment').value, 10);
 
-    const payload = { name, email, sector_id: sectorId };
-    console.log('🔧 Enviando JSON:', payload);
+    const formBody = new URLSearchParams();
+    formBody.append('name', name);
+    formBody.append('email', email);
+    formBody.append('sector_id', sectorId);
 
     try {
-    const formBody = new URLSearchParams();
-      formBody.append('name', name);
-      formBody.append('email', email);
-      formBody.append('sector_id', sectorId);
-
       const response = await fetch(`${apiBaseUrl}/funcionarios`, {
         method: 'POST',
         headers: {
@@ -115,37 +138,83 @@ document.addEventListener('DOMContentLoaded', () => {
         body: formBody.toString()
       });
 
-      const rawText = await response.text(); // debug
-      console.log('📝 Resposta bruta:', rawText);
-
-      let data;
-      try {
-        data = JSON.parse(rawText);
-      } catch {
-        data = {};
-      }
-
-      console.log('📥 Resposta /funcionarios:', response.status, data);
+      const data = await response.json();
 
       if (response.ok) {
         await fetchEmployees();
-        addForm.reset();
         hideModal(addModal);
-      } else if (response.status === 409) {
-        alert(`Erro de integridade: ${data.message}`);
-      } else if (response.status === 422) {
-        console.error('Erro 422 detalhes:', data);
-        alert('Erro 422: Requisição mal formatada. Verifique os campos.');
       } else {
-        alert(`Erro ao criar funcionário (${response.status}): ${data.message || JSON.stringify(data.detail)}`);
+        alert(`Erro (${response.status}): ${data.message}`);
       }
     } catch (err) {
-      console.error('Erro ao enviar requisição:', err);
+      console.error('Erro ao cadastrar funcionário:', err);
       alert('Erro inesperado ao cadastrar funcionário.');
     }
-  });
+  }
 
-  // CADASTRO DE SETOR
+  async function deleteEmployee(id) {
+    try {
+      const response = await fetch(`${apiBaseUrl}/funcionarios/${id}`, {
+        method: 'DELETE'
+      });
+      if (response.ok) {
+        alert('Funcionário excluído com sucesso.');
+        await fetchEmployees();
+      } else {
+        alert(`Erro ao excluir: ${response.status}`);
+      }
+    } catch (err) {
+      console.error('Erro ao excluir funcionário:', err);
+    }
+  }
+
+  function editEmployee(id) {
+    const employee = employeeList.find(e => e.id == id);
+    if (!employee) return;
+
+    document.getElementById('inputAddName').value = employee.name;
+    document.getElementById('inputAddEmail').value = employee.email;
+    document.getElementById('inputAddDepartment').value = employee.sector.id;
+
+    showModal(addModal);
+
+    addForm.onsubmit = async ev => {
+      ev.preventDefault();
+
+      const name = document.getElementById('inputAddName').value.trim();
+      const email = document.getElementById('inputAddEmail').value.trim();
+      const sectorId = parseInt(document.getElementById('inputAddDepartment').value, 10);
+
+      const formBody = new URLSearchParams();
+      formBody.append('name', name);
+      formBody.append('email', email);
+      formBody.append('sector_id', sectorId);
+
+      try {
+        const response = await fetch(`${apiBaseUrl}/funcionarios/${id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Accept': 'application/json'
+          },
+          body: formBody.toString()
+        });
+
+        if (response.ok) {
+          alert('Funcionário atualizado com sucesso.');
+          hideModal(addModal);
+          await fetchEmployees();
+        } else {
+          alert(`Erro ao atualizar funcionário: ${response.status}`);
+        }
+      } catch (err) {
+        console.error('Erro ao editar funcionário:', err);
+      }
+    };
+  }
+
+  addForm.addEventListener('submit', handleAddSubmit);
+
   addSectorForm.addEventListener('submit', async ev => {
     ev.preventDefault();
     const name = document.getElementById('inputAddSectorName').value.trim();
@@ -164,9 +233,7 @@ document.addEventListener('DOMContentLoaded', () => {
         body: formBody.toString(),
       });
 
-      const rawText = await response.text();
-      console.log('📝 Resposta setor:', rawText);
-      const data = JSON.parse(rawText);
+      const data = await response.json();
 
       if (response.ok) {
         await fetchSectors();
@@ -181,7 +248,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Inicialização
   fetchSectors();
   fetchEmployees();
 });
