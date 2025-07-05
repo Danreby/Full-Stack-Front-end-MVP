@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Lista de Funcionários</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css"/>
 </head>
 <body>
   <header class="site-header">
@@ -17,29 +17,50 @@
     <h2>Lista de Funcionários</h2>
     <div class="controls">
       <button id="buttonAddEmployee" class="btn-primary">Adicionar Funcionário</button>
-      <input type="text" id="inputSearchEmployee" placeholder="Buscar por nome..." class="search-input" />
+      <button id="buttonAddSector" class="btn-secondary">Adicionar Setor</button>
+      <input type="text" id="inputSearchEmployee" placeholder="Buscar por nome..." class="search-input"/>
     </div>
     <table id="employeeTable">
       <thead>
         <tr>
-          <th>ID</th>
-          <th>Nome</th>
-          <th>Departamento</th>
-          <th>E-mail</th>
-          <th>Ações</th>
+          <th>ID</th><th>Nome</th><th>Setor</th><th>E-mail</th>
         </tr>
       </thead>
       <tbody></tbody>
     </table>
   </main>
 
+  <!-- Modal Adicionar Funcionário -->
   <div id="modalAddEmployee" class="modal">
     <div class="modal-content">
       <h3>Adicionar Funcionário</h3>
       <form id="formAddEmployee" class="modal-form">
-        <label>Nome<input type="text" id="inputAddName" required></label>
-        <label>Departamento<input type="text" id="inputAddDepartment" required></label>
-        <label>E-mail<input type="email" id="inputAddEmail" required></label>
+        <label>
+          Nome
+          <input
+            type="text"
+            id="inputAddName"
+            required
+            maxlength="100"
+            placeholder="Nome completo"
+          />
+        </label>
+        <label>
+          Setor
+          <select id="inputAddDepartment" required></select>
+        </label>
+        <label>
+          E-mail
+          <input
+            type="email"
+            id="inputAddEmail"
+            required
+            maxlength="150"
+            placeholder="exemplo@email.com"
+            pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+            title="Digite um e-mail válido (ex: nome@dominio.com)"
+          />
+        </label>
         <div class="modal-actions">
           <button type="submit" class="btn-primary">Salvar</button>
           <button type="button" class="btn-secondary" data-close="modalAddEmployee">Cancelar</button>
@@ -48,47 +69,47 @@
     </div>
   </div>
 
-  <div id="modalEditEmployee" class="modal">
+  <!-- Modal Adicionar Setor -->
+  <div id="modalAddSector" class="modal">
     <div class="modal-content">
-      <h3>Editar Funcionário</h3>
-      <form id="formEditEmployee" class="modal-form">
-        <input type="hidden" id="inputEditId">
-        <label>Nome<input type="text" id="inputEditName" required></label>
-        <label>Departamento<input type="text" id="inputEditDepartment" required></label>
-        <label>E-mail<input type="email" id="inputEditEmail" required></label>
+      <h3>Adicionar Setor</h3>
+      <form id="formAddSector" class="modal-form">
+        <label>
+          Nome do Setor
+          <input
+            type="text"
+            id="inputAddSectorName"
+            required
+            maxlength="100"
+            placeholder="Nome do setor"
+          />
+        </label>
         <div class="modal-actions">
-          <button type="submit" class="btn-primary">Atualizar</button>
-          <button type="button" class="btn-secondary" data-close="modalEditEmployee">Cancelar</button>
+          <button type="submit" class="btn-primary">Salvar</button>
+          <button type="button" class="btn-secondary" data-close="modalAddSector">Cancelar</button>
         </div>
       </form>
     </div>
   </div>
 
-  <div id="modalDeleteEmployee" class="modal">
-    <div class="modal-content">
-      <h3>Confirmar Exclusão</h3>
-      <p>Tem certeza que deseja excluir este funcionário?</p>
-      <div class="modal-actions">
-        <button id="buttonConfirmDelete" class="btn-danger">Excluir</button>
-        <button type="button" class="btn-secondary" data-close="modalDeleteEmployee">Cancelar</button>
-      </div>
-    </div>
-  </div>
+  <!-- Campo de busca -->
+  <input
+    type="text"
+    id="inputSearchEmployee"
+    placeholder="Buscar por nome..."
+    class="search-input"
+    maxlength="100"
+  />
+
 
   <footer class="site-footer">
     <div class="container">
       <p>
-        <a href="https://github.com/Danreby/Full-Stack-Back-end-MVP" target="_blank" rel="noopener noreferrer">
-        Repositório Back-end MVP
-        </a>
-        |
-        <a href="https://github.com/Danreby/Full-Stack-Front-end-MVP" target="_blank" rel="noopener noreferrer">
-        Repositório Front-end MVP
-        </a>
+        <a href="#" target="_blank" rel="noopener">Repositório Back‑end MVP</a> |
+        <a href="#" target="_blank" rel="noopener">Repositório Front‑end MVP</a>
       </p>
     </div>
   </footer>
-
 
   <script src="scripts.js"></script>
 </body>
