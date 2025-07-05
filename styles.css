@@ -1,4 +1,3 @@
-/* === Base === */
 html, body {
   height: 100%;
   margin: 0;
@@ -18,7 +17,6 @@ body {
   margin: 0 auto;
 }
 
-/* === Header === */
 .site-header {
   background-color: #00467f;
   color: #fff;
@@ -36,7 +34,6 @@ body {
   font-size: 1.5rem;
 }
 
-/* === Main === */
 main {
   flex: 1;
   padding: 2rem 0;
@@ -65,7 +62,6 @@ select:focus {
   box-shadow: 0 0 0 2px rgba(0, 70, 127, 0.2);
 }
 
-/* === Buttons === */
 .btn-primary,
 .btn-secondary,
 .btn-danger,
@@ -132,7 +128,6 @@ select:focus {
   transform: scale(1.1);
 }
 
-/* === Tabela === */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -163,7 +158,6 @@ tbody tr:hover {
   background-color: #e6f2ff;
 }
 
-/* === Modal === */
 .modal {
   display: none;
   position: fixed;
@@ -230,7 +224,6 @@ tbody tr:hover {
   gap: 0.5rem;
 }
 
-/* === Footer === */
 .site-footer {
   background-color: #222;
   color: #ccc;
@@ -251,7 +244,6 @@ tbody tr:hover {
   text-decoration: underline;
 }
 
-/* === Responsivo === */
 @media (max-width: 600px) {
   .controls {
     flex-direction: column;
@@ -287,4 +279,38 @@ tbody tr:hover {
 }
 .flash-error {
   background-color: #f44336;
+}
+.btn-delete {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.btn-delete:hover {
+  background-color: #c0392b;
+}
+
+.btn-edit {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.btn-edit:hover {
+  background-color: #2980b9;
+}
+
+td .btn-delete,
+td .btn-edit {
+  margin-right: 5px;
 }
